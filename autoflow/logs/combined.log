@@ -1,0 +1,18 @@
+[2026-05-21 14:42:21] INFO  AutoFlow engine running on port 3000
+[2026-05-21 14:42:21] INFO  Webhooks: POST /webhook/whatsapp  POST /webhook/instagram
+[2026-05-21 14:42:21] INFO  API:      GET/POST /api/flows  /api/triggers  /api/templates
+[2026-05-21 14:44:45] INFO  GET / {"ip":"::1"}
+[2026-05-21 14:44:45] INFO  GET /_next/static/css/app/layout.css {"ip":"::1"}
+[2026-05-21 14:44:45] INFO  GET /_next/static/chunks/app/page.js {"ip":"::1"}
+[2026-05-21 14:44:45] INFO  GET /_next/static/chunks/webpack.js {"ip":"::1"}
+[2026-05-21 14:44:45] INFO  GET /_next/static/chunks/_app-pages-browser_components_game_GameShell_tsx.js {"ip":"::1"}
+[2026-05-21 14:44:45] INFO  GET /_next/static/chunks/main-app.js {"ip":"::1"}
+[2026-05-21 14:44:47] INFO  GET / {"ip":"::1"}
+[2026-05-21 14:44:47] INFO  GET /_next/static/css/app/layout.css {"ip":"::1"}
+[2026-05-21 14:48:41] INFO  AutoFlow engine running on port 3000
+[2026-05-21 14:48:41] INFO  Webhooks: POST /webhook/whatsapp  POST /webhook/instagram
+[2026-05-21 14:48:41] INFO  API:      GET/POST /api/flows  /api/triggers  /api/templates
+[2026-05-21 14:49:14] INFO  GET /automation-platform.html {"ip":"::1"}
+[2026-05-21 14:49:15] INFO  GET /favicon.ico {"ip":"::1"}
+[2026-05-21 14:49:35] INFO  GET /automation-platform.html {"ip":"::1"}
+[2026-05-21 14:49:35] INFO  GET /automation-platform.html {"ip":"::1"}

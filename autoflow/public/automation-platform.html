@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoFlow — WhatsApp & Instagram Automation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111114;
+    --surface2: #18181d;
+    --border: #222228;
+    --accent: #00e5a0;
+    --accent2: #7c5cfc;
+    --wa: #25D366;
+    --ig: #E1306C;
+    --text: #e8e8f0;
+    --muted: #6b6b7e;
+    --danger: #ff4d6d;
+    --warn: #ffd166;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo span {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+  .logo small {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 2px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .nav { flex: 1; padding: 12px 0; }
+  .nav-section { padding: 8px 18px 4px; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 18px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    font-size: 12px;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,229,160,0.06); }
+  .nav-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 16px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; box-shadow: 0 0 6px var(--accent); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .topbar-title { font-family: var(--sans); font-size: 15px; font-weight: 700; flex: 1; }
+  .badge {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-wa { background: rgba(37,211,102,0.15); color: var(--wa); }
+  .badge-ig { background: rgba(225,48,108,0.15); color: var(--ig); }
+  .badge-ok { background: rgba(0,229,160,0.12); color: var(--accent); }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #00ffb3; color: #000; }
+  .btn-danger { border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: rgba(255,77,109,0.1); }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .content::-webkit-scrollbar { width: 4px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* PAGE SECTIONS */
+  .page { display: none; }
+  .page.active { display: contents; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* STAT CARDS */
+  .stat { text-align: center; }
+  .stat .num { font-family: var(--sans); font-size: 32px; font-weight: 800; color: var(--accent); }
+  .stat .label { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  /* FORM ELEMENTS */
+  .form-group { margin-bottom: 14px; }
+  .form-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-control {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  .form-control::placeholder { color: var(--muted); }
+  select.form-control option { background: var(--surface2); }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+
+  /* AUTOMATION FLOW */
+  .flow-builder {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .flow-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .flow-step {
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .flow-step:last-child { border-bottom: none; }
+  .flow-step:hover { background: rgba(255,255,255,0.02); }
+
+  .step-number {
+    width: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .step-body { flex: 1; padding: 14px 18px; }
+  .step-kind { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .step-desc { color: var(--text); font-size: 12px; }
+  .step-meta { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  .step-trigger .step-kind { color: var(--warn); }
+  .step-condition .step-kind { color: var(--accent2); }
+  .step-action .step-kind { color: var(--accent); }
+  .step-wait .step-kind { color: var(--muted); }
+
+  .step-controls {
+    display: flex; align-items: center;
+    padding: 0 14px;
+    gap: 6px;
+  }
+  .icon-btn {
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* LOG */
+  .log-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 11px;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: var(--muted); flex-shrink: 0; width: 55px; }
+  .log-icon { flex-shrink: 0; }
+  .log-msg { flex: 1; color: var(--text); }
+  .log-ok { color: var(--accent); }
+  .log-err { color: var(--danger); }
+  .log-info { color: var(--accent2); }
+  .log-warn { color: var(--warn); }
+
+  /* TOGGLE */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle {
+    width: 36px; height: 20px;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    width: 14px; height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 19px; }
+  .toggle-label { font-size: 11px; color: var(--muted); }
+
+  /* WEBHOOK */
+  .webhook-url {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    word-break: break-all;
+    position: relative;
+  }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; padding: 3px 8px;
+    border-radius: 3px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    cursor: pointer; margin-top: 6px;
+    font-family: var(--mono);
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 520px;
+    max-width: 96vw;
+    padding: 24px;
+  }
+  .modal-title { font-family: var(--sans); font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* TRIGGER TABLE */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .tbl td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(255,255,255,0.015); }
+
+  /* PILL */
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 600;
+  }
+  .pill-green { background: rgba(0,229,160,0.12); color: var(--accent); }
+  .pill-red { background: rgba(255,77,109,0.12); color: var(--danger); }
+  .pill-yellow { background: rgba(255,209,102,0.12); color: var(--warn); }
+  .pill-blue { background: rgba(124,92,252,0.12); color: var(--accent2); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0d0d10;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 11px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: #a8b3cf;
+  }
+  .code-block .kw { color: var(--accent2); }
+  .code-block .str { color: var(--accent); }
+  .code-block .cmt { color: var(--muted); }
+  .code-block .key { color: #e8b96b; }
+
+  /* NOTIFICATION */
+  .notif {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-size: 12px;
+    color: var(--accent);
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .notif.show { transform: translateY(0); opacity: 1; }
+
+  /* SCROLLBAR for content */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-family: var(--sans); font-size: 14px; font-weight: 700; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 11px; color: var(--muted); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.07); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <span>AutoFlow</span>
+    <small>Automation Engine</small>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <div class="dot" style="background:var(--accent)"></div> Dashboard
+    </div>
+    <div class="nav-section">Channels</div>
+    <div class="nav-item" onclick="showPage('whatsapp',this)">
+      <div class="dot" style="background:var(--wa)"></div> WhatsApp Business
+    </div>
+    <div class="nav-item" onclick="showPage('instagram',this)">
+      <div class="dot" style="background:var(--ig)"></div> Instagram
+    </div>
+    <div class="nav-section">Automation</div>
+    <div class="nav-item" onclick="showPage('flows',this)">
+      <div class="dot" style="background:var(--accent2)"></div> Flows
+    </div>
+    <div class="nav-item" onclick="showPage('triggers',this)">
+      <div class="dot" style="background:var(--warn)"></div> Triggers
+    </div>
+    <div class="nav-item" onclick="showPage('templates',this)">
+      <div class="dot" style="background:var(--muted)"></div> Templates
+    </div>
+    <div class="nav-section">System</div>
+    <div class="nav-item" onclick="showPage('webhooks',this)">
+      <div class="dot" style="background:#6b9fff"></div> Webhooks
+    </div>
+    <div class="nav-item" onclick="showPage('logs',this)">
+      <div class="dot" style="background:var(--muted)"></div> Logs
+    </div>
+    <div class="nav-item" onclick="showPage('settings',this)">
+      <div class="dot" style="background:var(--muted)"></div> Settings
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>Engine running
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div id="topbar-badges"></div>
+  </div>
+  <div class="content" id="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="grid-3">
+        <div class="card stat">
+          <div class="num" id="stat-flows">6</div>
+          <div class="label">Active Flows</div>
+        </div>
+        <div class="card stat">
+          <div class="num" id="stat-msgs">1,284</div>
+          <div class="label">Messages Sent Today</div>
+        </div>
+        <div class="card stat">
+          <div class="num" id="stat-triggers">24</div>
+          <div class="label">Triggers Fired (24h)</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Activity</div>
+            <span class="badge badge-ok">LIVE</span>
+          </div>
+          <div id="live-log"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Channel Status</div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Channel</th><th>Status</th><th>Last event</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span style="color:var(--wa)">● WhatsApp</span></td>
+                <td><span class="pill pill-green">Connected</span></td>
+                <td style="color:var(--muted)">2s ago</td>
+              </tr>
+              <tr>
+                <td><span style="color:var(--ig)">● Instagram</span></td>
+                <td><span class="pill pill-green">Connected</span></td>
+                <td style="color:var(--muted)">14s ago</td>
+              </tr>
+              <tr>
+                <td><span style="color:#6b9fff">● Webhooks</span></td>
+                <td><span class="pill pill-yellow">3 pending</span></td>
+                <td style="color:var(--muted)">1m ago</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Quick Actions</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" onclick="showPage('flows', document.querySelector('.nav-item:nth-child(7)'))">+ New Flow</button>
+          <button class="btn" onclick="showPage('whatsapp', document.querySelector('.nav-item:nth-child(4)'))">Send WA Blast</button>
+          <button class="btn" onclick="showPage('instagram', document.querySelector('.nav-item:nth-child(5)'))">IG Auto-Reply</button>
+          <button class="btn" onclick="showPage('webhooks', document.querySelector('.nav-item:nth-child(11)'))">Test Webhook</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="page" id="page-whatsapp">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">API Configuration</div>
+            <span class="badge badge-wa">WA BUSINESS</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number ID</label>
+            <input class="form-control" id="wa-phone-id" placeholder="1234567890" value="1234567890">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Access Token</label>
+            <input class="form-control" id="wa-token" type="password" placeholder="EAAxxxxxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Business Account ID</label>
+            <input class="form-control" id="wa-biz-id" placeholder="WABA ID">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Verify Token (for webhook)</label>
+            <input class="form-control" id="wa-verify" placeholder="my_verify_token" value="autoflow_secret">
+          </div>
+          <button class="btn btn-primary" onclick="saveWAConfig()">Save & Test Connection</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Send Message</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">To (phone with country code)</label>
+            <input class="form-control" id="wa-to" placeholder="+919876543210">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message Type</label>
+            <select class="form-control" id="wa-msg-type" onchange="updateWAForm()">
+              <option value="text">Text</option>
+              <option value="template">Template</option>
+              <option value="image">Image</option>
+              <option value="interactive">Interactive (Buttons)</option>
+            </select>
+          </div>
+          <div id="wa-msg-body">
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-control" id="wa-msg" placeholder="Hello {{1}}, your order {{2}} is confirmed!"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="sendWAMessage()">Send via API</button>
+          <div id="wa-send-result" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Auto-Reply Rules</div>
+          <button class="btn" onclick="addWARule()">+ Add Rule</button>
+        </div>
+        <table class="tbl" id="wa-rules-tbl">
+          <thead><tr><th>Trigger Keyword</th><th>Match Type</th><th>Reply</th><th>Status</th><th></th></tr></thead>
+          <tbody id="wa-rules-body">
+            <tr>
+              <td><code style="color:var(--warn)">price</code></td>
+              <td><span class="pill pill-blue">contains</span></td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Our pricing starts at ₹999/month...</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--warn)">hello</code></td>
+              <td><span class="pill pill-blue">starts with</span></td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Hi! Welcome to AutoFlow. How can I help?</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td><code style="color:var(--warn)">stop</code></td>
+              <td><span class="pill pill-yellow">exact</span></td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">You've been unsubscribed. Reply START to rejoin.</td>
+              <td><span class="pill pill-red">Paused</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Payload Preview (WA Business API)</div></div>
+        <div class="code-block">
+<span class="cmt">// POST https://graph.facebook.com/v19.0/{phone_number_id}/messages</span>
+{
+  <span class="key">"messaging_product"</span>: <span class="str">"whatsapp"</span>,
+  <span class="key">"recipient_type"</span>: <span class="str">"individual"</span>,
+  <span class="key">"to"</span>: <span class="str">"+919876543210"</span>,
+  <span class="key">"type"</span>: <span class="str">"text"</span>,
+  <span class="key">"text"</span>: {
+    <span class="key">"preview_url"</span>: <span class="kw">false</span>,
+    <span class="key">"body"</span>: <span class="str">"Hello! Your order is confirmed."</span>
+  }
+}
+        </div>
+      </div>
+    </div>
+
+    <!-- INSTAGRAM -->
+    <div class="page" id="page-instagram">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Instagram Graph API</div>
+            <span class="badge badge-ig">IG GRAPH</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Instagram Business Account ID</label>
+            <input class="form-control" id="ig-user-id" placeholder="17841400000000000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Page Access Token</label>
+            <input class="form-control" id="ig-token" type="password" placeholder="EAAxxxxxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label class="form-label">App ID</label>
+            <input class="form-control" id="ig-app-id" placeholder="Facebook App ID">
+          </div>
+          <button class="btn btn-primary" onclick="saveIGConfig()">Save & Verify</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Automation Settings</div></div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">Auto-reply to comments</span>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">Auto-reply to DMs</span>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">Hide spam comments</span>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">Notify on story mentions</span>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">Auto-follow back</span>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+              <span class="toggle-label">DM on post like (threshold)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Comment / DM Auto-Reply Rules</div>
+          <button class="btn" onclick="addIGRule()">+ Add Rule</button>
+        </div>
+        <table class="tbl" id="ig-rules-tbl">
+          <thead><tr><th>Trigger</th><th>Channel</th><th>Action</th><th>Reply Template</th><th>Status</th><th></th></tr></thead>
+          <tbody id="ig-rules-body">
+            <tr>
+              <td><code style="color:var(--warn)">price</code></td>
+              <td><span class="pill pill-blue">DM</span></td>
+              <td>Send DM</td>
+              <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Check our link in bio!</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td>Any comment</td>
+              <td><span class="pill pill-ig" style="background:rgba(225,48,108,0.12);color:var(--ig)">Comment</span></td>
+              <td>Reply</td>
+              <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Thanks for your comment! 🙌</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">IG Webhook Events Subscribed</div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span class="chip active">messages</span>
+          <span class="chip active">comments</span>
+          <span class="chip active">story_insights</span>
+          <span class="chip active">mentions</span>
+          <span class="chip" onclick="this.classList.toggle('active')">feed</span>
+          <span class="chip" onclick="this.classList.toggle('active')">live_comments</span>
+          <span class="chip active">messaging_seen</span>
+          <span class="chip" onclick="this.classList.toggle('active')">messaging_reactions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOWS -->
+    <div class="page" id="page-flows">
+      <div class="section-head">
+        <div class="section-title">Automation Flows</div>
+        <button class="btn btn-primary" onclick="openNewFlowModal()">+ New Flow</button>
+      </div>
+
+      <div id="flows-list"></div>
+    </div>
+
+    <!-- TRIGGERS -->
+    <div class="page" id="page-triggers">
+      <div class="section-head">
+        <div class="section-title">Triggers</div>
+        <button class="btn btn-primary" onclick="openTriggerModal()">+ New Trigger</button>
+      </div>
+
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>Channel</th><th>Event</th><th>Condition</th><th>Fired</th><th>Status</th><th></th></tr></thead>
+          <tbody id="triggers-body">
+            <tr>
+              <td>Keyword: price</td>
+              <td><span style="color:var(--wa)">WhatsApp</span></td>
+              <td>message_received</td>
+              <td>contains "price"</td>
+              <td>142</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td>New DM</td>
+              <td><span style="color:var(--ig)">Instagram</span></td>
+              <td>messages</td>
+              <td>any</td>
+              <td>58</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td>Story mention</td>
+              <td><span style="color:var(--ig)">Instagram</span></td>
+              <td>mentions</td>
+              <td>any</td>
+              <td>12</td>
+              <td><span class="pill pill-yellow">Paused</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            <tr>
+              <td>Opt-out STOP</td>
+              <td><span style="color:var(--wa)">WhatsApp</span></td>
+              <td>message_received</td>
+              <td>exact "STOP"</td>
+              <td>7</td>
+              <td><span class="pill pill-green">Active</span></td>
+              <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Trigger Types Reference</div></div>
+        <div class="grid-2" style="gap:10px">
+          <div style="padding:12px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)">
+            <div style="color:var(--wa);font-size:11px;margin-bottom:6px;letter-spacing:1px">WHATSAPP EVENTS</div>
+            <div style="color:var(--muted);font-size:11px;line-height:2">
+              message_received · message_delivered<br>
+              message_read · button_reply<br>
+              list_reply · flow_response
+            </div>
+          </div>
+          <div style="padding:12px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)">
+            <div style="color:var(--ig);font-size:11px;margin-bottom:6px;letter-spacing:1px">INSTAGRAM EVENTS</div>
+            <div style="color:var(--muted);font-size:11px;line-height:2">
+              messages · comments · mentions<br>
+              story_insights · live_comments<br>
+              messaging_seen · messaging_reactions
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="page" id="page-templates">
+      <div class="section-head">
+        <div class="section-title">Message Templates</div>
+        <button class="btn btn-primary" onclick="openTemplateModal()">+ New Template</button>
+      </div>
+      <div class="grid-2" id="templates-grid"></div>
+    </div>
+
+    <!-- WEBHOOKS -->
+    <div class="page" id="page-webhooks">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Inbound Webhook URLs</div></div>
+          <div class="form-group">
+            <label class="form-label">WhatsApp Webhook Endpoint</label>
+            <div class="webhook-url" id="wa-webhook-url">https://autoflow.yourdomain.com/webhook/whatsapp</div>
+            <button class="copy-btn" onclick="copyText('wa-webhook-url')">⎘ Copy</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Instagram Webhook Endpoint</label>
+            <div class="webhook-url" id="ig-webhook-url">https://autoflow.yourdomain.com/webhook/instagram</div>
+            <button class="copy-btn" onclick="copyText('ig-webhook-url')">⎘ Copy</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Generic Webhook (any HTTP trigger)</label>
+            <div class="webhook-url" id="gen-webhook-url">https://autoflow.yourdomain.com/webhook/generic/<span style="color:var(--warn)">YOUR_FLOW_ID</span></div>
+            <button class="copy-btn" onclick="copyText('gen-webhook-url')">⎘ Copy</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Webhook Test</div></div>
+          <div class="form-group">
+            <label class="form-label">Select Channel</label>
+            <select class="form-control" id="test-channel">
+              <option>WhatsApp</option>
+              <option>Instagram</option>
+              <option>Generic</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Event Type</label>
+            <select class="form-control" id="test-event">
+              <option>message_received</option>
+              <option>comment_posted</option>
+              <option>story_mention</option>
+              <option>button_reply</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payload (JSON)</label>
+            <textarea class="form-control" id="test-payload" style="min-height:100px;font-size:11px">{"from": "+919876543210", "text": "Hello, what is the price?"}</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="testWebhook()">Send Test Event</button>
+          <div id="test-result" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Backend Integration Code</div></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <span class="chip active" onclick="showCode('node',this)">Node.js</span>
+          <span class="chip" onclick="showCode('python',this)">Python</span>
+        </div>
+        <div id="code-node" class="code-block">
+<span class="cmt">// Express.js webhook handler</span>
+<span class="kw">const</span> express = <span class="kw">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> app = express();
+app.use(express.json());
+
+<span class="cmt">// WhatsApp webhook verification</span>
+app.get(<span class="str">'/webhook/whatsapp'</span>, (req, res) => {
+  <span class="kw">const</span> mode = req.query[<span class="str">'hub.mode'</span>];
+  <span class="kw">const</span> token = req.query[<span class="str">'hub.verify_token'</span>];
+  <span class="kw">const</span> challenge = req.query[<span class="str">'hub.challenge'</span>];
+  <span class="kw">if</span> (mode === <span class="str">'subscribe'</span> && token === process.env.VERIFY_TOKEN) {
+    res.status(200).send(challenge);
+  } <span class="kw">else</span> { res.sendStatus(403); }
+});
+
+<span class="cmt">// Receive & route messages</span>
+app.post(<span class="str">'/webhook/whatsapp'</span>, (req, res) => {
+  <span class="kw">const</span> entry = req.body.entry?.[0];
+  <span class="kw">const</span> change = entry?.changes?.[0];
+  <span class="kw">const</span> message = change?.value?.messages?.[0];
+  <span class="kw">if</span> (message) {
+    processMessage(message); <span class="cmt">// → match triggers → run flow</span>
+  }
+  res.sendStatus(200);
+});
+
+<span class="kw">async function</span> sendWAMessage(to, text) {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(
+    <span class="str">`https://graph.facebook.com/v19.0/${process.env.WA_PHONE_ID}/messages`</span>,
+    { method: <span class="str">'POST'</span>, headers: {
+        Authorization: <span class="str">`Bearer ${process.env.WA_TOKEN}`</span>,
+        <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>
+      }, body: JSON.stringify({ messaging_product: <span class="str">'whatsapp'</span>,
+        to, type: <span class="str">'text'</span>, text: { body: text } }) }
+  );
+  <span class="kw">return</span> res.json();
+}
+
+app.listen(3000);
+        </div>
+        <div id="code-python" class="code-block" style="display:none">
+<span class="cmt"># FastAPI webhook handler</span>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Request
+<span class="kw">import</span> httpx, os
+
+app = FastAPI()
+WA_PHONE_ID = os.getenv(<span class="str">"WA_PHONE_ID"</span>)
+WA_TOKEN = os.getenv(<span class="str">"WA_TOKEN"</span>)
+VERIFY_TOKEN = os.getenv(<span class="str">"VERIFY_TOKEN"</span>)
+
+<span class="cmt"># Webhook verification</span>
+@app.get(<span class="str">"/webhook/whatsapp"</span>)
+<span class="kw">async def</span> verify(request: Request):
+    params = dict(request.query_params)
+    <span class="kw">if</span> params.get(<span class="str">"hub.verify_token"</span>) == VERIFY_TOKEN:
+        <span class="kw">return</span> int(params[<span class="str">"hub.challenge"</span>])
+    <span class="kw">return</span> {<span class="str">"error"</span>: <span class="str">"Forbidden"</span>}
+
+<span class="cmt"># Receive messages</span>
+@app.post(<span class="str">"/webhook/whatsapp"</span>)
+<span class="kw">async def</span> whatsapp_hook(req: Request):
+    data = <span class="kw">await</span> req.json()
+    msgs = (data.get(<span class="str">"entry"</span>,[{}])[0]
+            .get(<span class="str">"changes"</span>,[{}])[0]
+            .get(<span class="str">"value"</span>,{}).get(<span class="str">"messages"</span>,[]))
+    <span class="kw">for</span> msg <span class="kw">in</span> msgs:
+        <span class="kw">await</span> process_message(msg)
+    <span class="kw">return</span> {<span class="str">"status"</span>: <span class="str">"ok"</span>}
+
+<span class="kw">async def</span> send_wa(to: str, text: str):
+    <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> client:
+        <span class="kw">return await</span> client.post(
+            f<span class="str">"https://graph.facebook.com/v19.0/{WA_PHONE_ID}/messages"</span>,
+            headers={<span class="str">"Authorization"</span>: f<span class="str">"Bearer {WA_TOKEN}"</span>},
+            json={<span class="str">"messaging_product"</span>: <span class="str">"whatsapp"</span>,
+                  <span class="str">"to"</span>: to, <span class="str">"type"</span>: <span class="str">"text"</span>,
+                  <span class="str">"text"</span>: {<span class="str">"body"</span>: text}})
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="page" id="page-logs">
+      <div class="section-head">
+        <div class="section-title">System Logs</div>
+        <div style="display:flex;gap:8px">
+          <span class="chip active" onclick="filterLogs('all',this)">All</span>
+          <span class="chip" onclick="filterLogs('wa',this)">WhatsApp</span>
+          <span class="chip" onclick="filterLogs('ig',this)">Instagram</span>
+          <span class="chip" onclick="filterLogs('err',this)">Errors</span>
+        </div>
+      </div>
+      <div class="card">
+        <div id="logs-container"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Rate Limiting</div></div>
+          <div class="form-group">
+            <label class="form-label">Max messages/minute per user</label>
+            <input class="form-control" value="5" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Global send limit (per hour)</label>
+            <input class="form-control" value="1000" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Retry failed sends</label>
+            <select class="form-control">
+              <option>3 times</option>
+              <option>5 times</option>
+              <option>No retry</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="notify('Rate limits saved')">Save</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Business Hours</div></div>
+          <div class="toggle-wrap" style="margin-bottom:14px">
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            <span class="toggle-label">Enable business hours restriction</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Open</label>
+            <input class="form-control" type="time" value="09:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Close</label>
+            <input class="form-control" type="time" value="18:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Outside hours message</label>
+            <textarea class="form-control">We're currently closed. Our hours are 9am–6pm IST. We'll reply soon!</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="notify('Hours saved')">Save</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Notifications</div></div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">Email on flow errors</span></div>
+            <div class="toggle-wrap"><div class="toggle" onclick="this.classList.toggle('on')"></div><span class="toggle-label">Slack alerts</span></div>
+            <div class="toggle-wrap"><div class="toggle on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">Daily summary report</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Danger Zone</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-danger" onclick="notify('All flows paused')">⏸ Pause All Flows</button>
+            <button class="btn btn-danger" onclick="notify('Logs cleared')">🗑 Clear All Logs</button>
+            <button class="btn btn-danger">⚠ Reset All Config</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-flow">
+  <div class="modal">
+    <div class="modal-title">New Automation Flow</div>
+    <div class="form-group">
+      <label class="form-label">Flow Name</label>
+      <input class="form-control" id="new-flow-name" placeholder="e.g. Welcome Series">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Channel</label>
+      <select class="form-control" id="new-flow-channel">
+        <option>WhatsApp</option>
+        <option>Instagram</option>
+        <option>Both</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Trigger Event</label>
+      <select class="form-control" id="new-flow-trigger">
+        <option>message_received</option>
+        <option>keyword_match</option>
+        <option>first_message</option>
+        <option>comment_posted</option>
+        <option>story_mention</option>
+        <option>button_click</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-control" id="new-flow-desc" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-flow')">Cancel</button>
+      <button class="btn btn-primary" onclick="createFlow()">Create Flow</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-wa-rule">
+  <div class="modal">
+    <div class="modal-title">Add WhatsApp Auto-Reply Rule</div>
+    <div class="form-group">
+      <label class="form-label">Trigger Keyword</label>
+      <input class="form-control" id="rule-keyword" placeholder="e.g. price, hello, order">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Match Type</label>
+      <select class="form-control" id="rule-match">
+        <option>contains</option>
+        <option>exact</option>
+        <option>starts with</option>
+        <option>regex</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reply Message</label>
+      <textarea class="form-control" id="rule-reply" placeholder="Use {{name}} for contact name, {{1}} for variables"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-wa-rule')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWARule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-ig-rule">
+  <div class="modal">
+    <div class="modal-title">Add Instagram Auto-Reply Rule</div>
+    <div class="form-group">
+      <label class="form-label">Trigger</label>
+      <input class="form-control" id="ig-rule-kw" placeholder="keyword or 'any'">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Channel</label>
+      <select class="form-control" id="ig-rule-channel">
+        <option>DM</option>
+        <option>Comment</option>
+        <option>Both</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reply</label>
+      <textarea class="form-control" id="ig-rule-reply" placeholder="Reply text..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-ig-rule')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveIGRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-template">
+  <div class="modal">
+    <div class="modal-title">New Message Template</div>
+    <div class="form-group">
+      <label class="form-label">Template Name</label>
+      <input class="form-control" id="tpl-name" placeholder="order_confirmation">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Channel</label>
+      <select class="form-control" id="tpl-channel">
+        <option>WhatsApp</option>
+        <option>Instagram</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Body (use {{1}}, {{2}} for variables)</label>
+      <textarea class="form-control" id="tpl-body" placeholder="Hello {{1}}, your order {{2}} has been confirmed!"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-template')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-trigger">
+  <div class="modal">
+    <div class="modal-title">New Trigger</div>
+    <div class="form-group">
+      <label class="form-label">Trigger Name</label>
+      <input class="form-control" id="trig-name" placeholder="e.g. Order keyword">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Channel</label>
+      <select class="form-control" id="trig-channel">
+        <option>WhatsApp</option>
+        <option>Instagram</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Event</label>
+      <select class="form-control" id="trig-event">
+        <option>message_received</option>
+        <option>comment_posted</option>
+        <option>story_mention</option>
+        <option>button_reply</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Condition</label>
+      <input class="form-control" id="trig-cond" placeholder='contains "order"'>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-trigger')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTrigger()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  flows: [
+    { id: 1, name: 'Welcome Series', channel: 'WhatsApp', trigger: 'first_message', active: true, runs: 89,
+      steps: [
+        { type:'trigger', desc:'First message received', meta:'WhatsApp · first_message' },
+        { type:'action', desc:'Send welcome message', meta:'Template: welcome_msg' },
+        { type:'wait', desc:'Wait 10 minutes', meta:'Delay: 600s' },
+        { type:'action', desc:'Send product catalog', meta:'Template: catalog_link' }
+      ]
+    },
+    { id: 2, name: 'Keyword: price', channel: 'WhatsApp', trigger: 'keyword_match', active: true, runs: 142,
+      steps: [
+        { type:'trigger', desc:'Message contains "price"', meta:'WhatsApp · keyword' },
+        { type:'condition', desc:'Is business hours?', meta:'09:00–18:00 IST' },
+        { type:'action', desc:'Send pricing info', meta:'Template: pricing_template' }
+      ]
+    },
+    { id: 3, name: 'IG Comment Reply', channel: 'Instagram', trigger: 'comment_posted', active: true, runs: 34,
+      steps: [
+        { type:'trigger', desc:'Comment posted on post', meta:'Instagram · comment' },
+        { type:'action', desc:'Reply to comment', meta:'"Thanks for engaging!"' },
+        { type:'action', desc:'Send DM with offer', meta:'Template: ig_offer_dm' }
+      ]
+    },
+    { id: 4, name: 'Story Mention Flow', channel: 'Instagram', trigger: 'story_mention', active: false, runs: 12,
+      steps: [
+        { type:'trigger', desc:'User mentions our account in story', meta:'Instagram · mentions' },
+        { type:'action', desc:'Send DM thank you', meta:'Template: story_thanks' }
+      ]
+    }
+  ],
+  templates: [
+    { id:1, name:'welcome_msg', channel:'WhatsApp', body:'Hello {{1}}! Welcome to our service. How can we help you today?' },
+    { id:2, name:'pricing_template', channel:'WhatsApp', body:'Hi! Our pricing:\n• Basic: ₹999/mo\n• Pro: ₹2499/mo\n• Enterprise: ₹9999/mo\nReply with a plan name to proceed!' },
+    { id:3, name:'ig_offer_dm', channel:'Instagram', body:'Hey! Thanks for your comment 🙌 DM us for an exclusive 20% off code!' },
+    { id:4, name:'story_thanks', channel:'Instagram', body:'Thank you so much for the mention! Here\'s a little gift for you 🎁' }
+  ],
+  logs: []
+};
+
+// ─── INITIAL LOG SEED ─────────────────────────────────────────────────────────
+const logMessages = [
+  { t:'wa', icon:'📨', msg:'Received: +919876543210 → "What is the price?"', type:'ok' },
+  { t:'wa', icon:'✅', msg:'Trigger matched: keyword "price" → Flow #2 executed', type:'ok' },
+  { t:'wa', icon:'📤', msg:'Sent: pricing_template → +919876543210', type:'ok' },
+  { t:'ig', icon:'💬', msg:'New comment on post #ig_001: "How much?"', type:'info' },
+  { t:'ig', icon:'↩️', msg:'Auto-replied to comment · user: @ravi_kumar', type:'ok' },
+  { t:'ig', icon:'📩', msg:'DM sent → @ravi_kumar: ig_offer_dm template', type:'ok' },
+  { t:'wa', icon:'🔴', msg:'ERROR: Token expired for WA Phone ID 1234567890', type:'err' },
+  { t:'wa', icon:'🔄', msg:'Retrying with refreshed token...', type:'warn' },
+  { t:'wa', icon:'✅', msg:'Token refreshed. Flow resumed.', type:'ok' },
+];
+
+function seedLogs() {
+  const now = new Date();
+  logMessages.forEach((l, i) => {
+    const d = new Date(now - (logMessages.length - i) * 45000);
+    state.logs.push({ ...l, time: d });
+  });
+}
+
+function timeStr(d) {
+  return d.toLocaleTimeString('en-IN', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+const pageTitles = {
+  dashboard: 'Dashboard',
+  whatsapp: 'WhatsApp Business',
+  instagram: 'Instagram',
+  flows: 'Automation Flows',
+  triggers: 'Triggers',
+  templates: 'Message Templates',
+  webhooks: 'Webhooks & Integration',
+  logs: 'System Logs',
+  settings: 'Settings'
+};
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[name] || name;
+
+  if (name === 'flows') renderFlows();
+  if (name === 'templates') renderTemplates();
+  if (name === 'logs') renderLogs();
+  if (name === 'dashboard') renderDashLog();
+}
+
+// ─── FLOWS ────────────────────────────────────────────────────────────────────
+function renderFlows() {
+  const el = document.getElementById('flows-list');
+  el.innerHTML = '';
+  state.flows.forEach(flow => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '16px';
+    div.innerHTML = `
+      <div class="flow-builder">
+        <div class="flow-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--sans);font-size:13px;font-weight:700">${flow.name}</span>
+            <span class="badge ${flow.channel==='WhatsApp'?'badge-wa':'badge-ig'}">${flow.channel.toUpperCase()}</span>
+            <span class="pill ${flow.active?'pill-green':'pill-red'}">${flow.active?'Active':'Paused'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:var(--muted);font-size:11px">${flow.runs} runs</span>
+            <div class="toggle ${flow.active?'on':''}" onclick="toggleFlow(${flow.id},this)"></div>
+            <button class="icon-btn del" onclick="deleteFlow(${flow.id})">✕</button>
+          </div>
+        </div>
+        ${flow.steps.map((s,i) => `
+          <div class="flow-step step-${s.type}">
+            <div class="step-number">${i+1}</div>
+            <div class="step-body">
+              <div class="step-kind">${s.type.toUpperCase()}</div>
+              <div class="step-desc">${s.desc}</div>
+              <div class="step-meta">${s.meta}</div>
+            </div>
+            <div class="step-controls">
+              <button class="icon-btn" title="Move up" onclick="moveStep(${flow.id},${i},-1)">↑</button>
+              <button class="icon-btn" title="Move down" onclick="moveStep(${flow.id},${i},1)">↓</button>
+              <button class="icon-btn del" onclick="removeStep(${flow.id},${i})">✕</button>
+            </div>
+          </div>
+        `).join('')}
+        <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="btn" onclick="addStep(${flow.id},'action')">+ Action</button>
+          <button class="btn" onclick="addStep(${flow.id},'condition')">+ Condition</button>
+          <button class="btn" onclick="addStep(${flow.id},'wait')">+ Wait</button>
+        </div>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function toggleFlow(id, el) {
+  const flow = state.flows.find(f => f.id === id);
+  if (flow) { flow.active = !flow.active; el.classList.toggle('on'); }
+  renderFlows();
+}
+function deleteFlow(id) {
+  state.flows = state.flows.filter(f => f.id !== id);
+  renderFlows();
+  notify('Flow deleted');
+}
+function moveStep(fid, i, dir) {
+  const flow = state.flows.find(f => f.id === fid);
+  if (!flow) return;
+  const j = i + dir;
+  if (j < 0 || j >= flow.steps.length) return;
+  [flow.steps[i], flow.steps[j]] = [flow.steps[j], flow.steps[i]];
+  renderFlows();
+}
+function removeStep(fid, i) {
+  const flow = state.flows.find(f => f.id === fid);
+  if (flow) { flow.steps.splice(i, 1); renderFlows(); }
+}
+function addStep(fid, type) {
+  const labels = { action:'Send message', condition:'Check condition', wait:'Wait 5 minutes' };
+  const metas = { action:'Template: my_template', condition:'If keyword matches', wait:'Delay: 300s' };
+  const flow = state.flows.find(f => f.id === fid);
+  if (flow) {
+    flow.steps.push({ type, desc: labels[type], meta: metas[type] });
+    renderFlows();
+    notify('Step added');
+  }
+}
+
+function openNewFlowModal() {
+  document.getElementById('modal-flow').classList.add('open');
+}
+function createFlow() {
+  const name = document.getElementById('new-flow-name').value.trim();
+  const channel = document.getElementById('new-flow-channel').value;
+  const trigger = document.getElementById('new-flow-trigger').value;
+  if (!name) { notify('Enter a flow name'); return; }
+  state.flows.push({
+    id: Date.now(), name, channel, trigger, active: true, runs: 0,
+    steps: [{ type:'trigger', desc:`Trigger: ${trigger}`, meta:`${channel} · ${trigger}` }]
+  });
+  closeModal('modal-flow');
+  renderFlows();
+  notify('Flow created ✓');
+}
+
+// ─── TEMPLATES ────────────────────────────────────────────────────────────────
+function renderTemplates() {
+  const el = document.getElementById('templates-grid');
+  el.innerHTML = '';
+  state.templates.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${t.name}</div>
+        <span class="badge ${t.channel==='WhatsApp'?'badge-wa':'badge-ig'}">${t.channel.toUpperCase()}</span>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px;font-size:11px;line-height:1.8;color:var(--muted);white-space:pre-wrap">${t.body}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn" onclick="copyText2('${t.body.replace(/'/g,"\\'")}')">⎘ Copy</button>
+        <button class="btn btn-danger" onclick="deleteTemplate(${t.id})">Delete</button>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+function deleteTemplate(id) {
+  state.templates = state.templates.filter(t => t.id !== id);
+  renderTemplates(); notify('Template deleted');
+}
+function openTemplateModal() {
+  document.getElementById('modal-template').classList.add('open');
+}
+function saveTemplate() {
+  const name = document.getElementById('tpl-name').value.trim();
+  const channel = document.getElementById('tpl-channel').value;
+  const body = document.getElementById('tpl-body').value.trim();
+  if (!name || !body) { notify('Fill all fields'); return; }
+  state.templates.push({ id: Date.now(), name, channel, body });
+  closeModal('modal-template');
+  renderTemplates(); notify('Template saved ✓');
+}
+
+// ─── WA RULES ────────────────────────────────────────────────────────────────
+function addWARule() {
+  document.getElementById('modal-wa-rule').classList.add('open');
+}
+function saveWARule() {
+  const kw = document.getElementById('rule-keyword').value.trim();
+  const match = document.getElementById('rule-match').value;
+  const reply = document.getElementById('rule-reply').value.trim();
+  if (!kw || !reply) { notify('Fill all fields'); return; }
+  const tb = document.getElementById('wa-rules-body');
+  const row = document.createElement('tr');
+  row.innerHTML = `<td><code style="color:var(--warn)">${kw}</code></td>
+    <td><span class="pill pill-blue">${match}</span></td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reply}</td>
+    <td><span class="pill pill-green">Active</span></td>
+    <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tb.appendChild(row);
+  closeModal('modal-wa-rule');
+  notify('Rule added ✓');
+}
+
+// ─── IG RULES ────────────────────────────────────────────────────────────────
+function addIGRule() {
+  document.getElementById('modal-ig-rule').classList.add('open');
+}
+function saveIGRule() {
+  const kw = document.getElementById('ig-rule-kw').value.trim();
+  const ch = document.getElementById('ig-rule-channel').value;
+  const reply = document.getElementById('ig-rule-reply').value.trim();
+  if (!kw || !reply) { notify('Fill all fields'); return; }
+  const tb = document.getElementById('ig-rules-body');
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${kw}</td>
+    <td><span class="pill pill-blue">${ch}</span></td>
+    <td>Reply / Send DM</td>
+    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reply}</td>
+    <td><span class="pill pill-green">Active</span></td>
+    <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tb.appendChild(row);
+  closeModal('modal-ig-rule');
+  notify('IG rule added ✓');
+}
+
+// ─── TRIGGERS ────────────────────────────────────────────────────────────────
+function openTriggerModal() { document.getElementById('modal-trigger').classList.add('open'); }
+function saveTrigger() {
+  const name = document.getElementById('trig-name').value.trim();
+  const ch = document.getElementById('trig-channel').value;
+  const ev = document.getElementById('trig-event').value;
+  const cond = document.getElementById('trig-cond').value.trim() || 'any';
+  if (!name) { notify('Enter trigger name'); return; }
+  const tb = document.getElementById('triggers-body');
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${name}</td>
+    <td><span style="color:${ch==='WhatsApp'?'var(--wa)':'var(--ig)'}">${ch}</span></td>
+    <td>${ev}</td><td>${cond}</td><td>0</td>
+    <td><span class="pill pill-green">Active</span></td>
+    <td><button class="icon-btn del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tb.appendChild(row);
+  closeModal('modal-trigger'); notify('Trigger created ✓');
+}
+
+// ─── LOGS ────────────────────────────────────────────────────────────────────
+let logFilter = 'all';
+function renderLogs() {
+  const el = document.getElementById('logs-container');
+  const filtered = logFilter === 'all' ? state.logs :
+    logFilter === 'err' ? state.logs.filter(l => l.type === 'err') :
+    state.logs.filter(l => l.t === logFilter);
+  el.innerHTML = filtered.slice().reverse().map(l => `
+    <div class="log-entry">
+      <span class="log-time">${timeStr(l.time)}</span>
+      <span class="log-icon">${l.icon}</span>
+      <span class="log-msg log-${l.type}">${l.msg}</span>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:12px;padding:12px">No logs</div>';
+}
+function filterLogs(f, el) {
+  logFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderLogs();
+}
+
+function renderDashLog() {
+  const el = document.getElementById('live-log');
+  if (!el) return;
+  el.innerHTML = state.logs.slice(-6).reverse().map(l => `
+    <div class="log-entry">
+      <span class="log-time">${timeStr(l.time)}</span>
+      <span class="log-icon">${l.icon}</span>
+      <span class="log-msg log-${l.type}" style="font-size:11px">${l.msg}</span>
+    </div>`).join('');
+}
+
+// ─── WEBHOOKS / TEST ──────────────────────────────────────────────────────────
+function testWebhook() {
+  const channel = document.getElementById('test-channel').value;
+  const event = document.getElementById('test-event').value;
+  let payload;
+  try { payload = JSON.parse(document.getElementById('test-payload').value); }
+  catch(e) { document.getElementById('test-result').textContent = '⚠ Invalid JSON'; return; }
+
+  const el = document.getElementById('test-result');
+  el.textContent = '⏳ Sending...';
+  el.style.color = 'var(--warn)';
+
+  // Simulate processing
+  setTimeout(() => {
+    const matched = state.flows.filter(f =>
+      f.active && (f.channel === channel || f.channel === 'Both')
+    );
+    const logEntry = {
+      t: channel === 'WhatsApp' ? 'wa' : 'ig',
+      icon: '🧪',
+      msg: `TEST · ${channel} · ${event} → ${matched.length} flow(s) matched`,
+      type: 'info',
+      time: new Date()
+    };
+    state.logs.push(logEntry);
+    el.textContent = `✓ Processed. ${matched.length} flow(s) triggered. Event logged.`;
+    el.style.color = 'var(--accent)';
+    notify(`Test sent → ${matched.length} flow(s) matched`);
+  }, 800);
+}
+
+// ─── WA SEND ─────────────────────────────────────────────────────────────────
+function sendWAMessage() {
+  const to = document.getElementById('wa-to').value.trim();
+  const msg = document.getElementById('wa-msg')?.value?.trim();
+  const el = document.getElementById('wa-send-result');
+  if (!to) { el.textContent = '⚠ Enter phone number'; return; }
+
+  el.textContent = '⏳ Sending...'; el.style.color = 'var(--warn)';
+
+  // Simulate API call
+  setTimeout(() => {
+    const msgId = 'wamid.' + Math.random().toString(36).substr(2,20).toUpperCase();
+    state.logs.push({
+      t:'wa', icon:'📤',
+      msg:`Sent to ${to}: "${(msg||'(template)').substring(0,40)}..." [${msgId}]`,
+      type:'ok', time: new Date()
+    });
+    document.getElementById('stat-msgs').textContent =
+      (parseInt(document.getElementById('stat-msgs').textContent.replace(',','')) + 1).toLocaleString();
+    el.innerHTML = `✓ Delivered · ID: <span style="color:var(--accent)">${msgId}</span>`;
+    el.style.color = 'var(--accent)';
+    notify('WA message sent ✓');
+  }, 900);
+}
+
+function saveWAConfig() {
+  notify('WhatsApp config saved & verified ✓');
+  state.logs.push({ t:'wa', icon:'🔗', msg:'WA Business API config updated', type:'ok', time: new Date() });
+}
+function saveIGConfig() {
+  notify('Instagram config saved & verified ✓');
+  state.logs.push({ t:'ig', icon:'🔗', msg:'Instagram Graph API config updated', type:'ok', time: new Date() });
+}
+
+// ─── CODE TABS ────────────────────────────────────────────────────────────────
+function showCode(lang, el) {
+  document.getElementById('code-node').style.display = lang === 'node' ? 'block' : 'none';
+  document.getElementById('code-python').style.display = lang === 'python' ? 'block' : 'none';
+  document.querySelectorAll('#page-webhooks .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── WA FORM UPDATE ───────────────────────────────────────────────────────────
+function updateWAForm() {
+  const type = document.getElementById('wa-msg-type').value;
+  const body = document.getElementById('wa-msg-body');
+  const templates = {
+    text: `<div class="form-group"><label class="form-label">Message</label><textarea class="form-control" id="wa-msg" placeholder="Hello {{1}}, your order {{2}} is confirmed!"></textarea></div>`,
+    template: `<div class="form-group"><label class="form-label">Template Name</label><input class="form-control" id="wa-msg" placeholder="order_confirmation"></div>
+      <div class="form-group"><label class="form-label">Language</label><select class="form-control"><option>en_US</option><option>en_IN</option><option>hi</option></select></div>`,
+    image: `<div class="form-group"><label class="form-label">Image URL</label><input class="form-control" id="wa-msg" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Caption</label><textarea class="form-control" placeholder="Optional caption"></textarea></div>`,
+    interactive: `<div class="form-group"><label class="form-label">Body Text</label><textarea class="form-control" id="wa-msg" placeholder="Choose an option:"></textarea></div>
+      <div class="form-group"><label class="form-label">Button 1</label><input class="form-control" placeholder="Yes, I'm interested"></div>
+      <div class="form-group"><label class="form-label">Button 2</label><input class="form-control" placeholder="Not now"></div>`
+  };
+  body.innerHTML = templates[type] || templates.text;
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => notify('Copied ✓'));
+}
+function copyText2(text) {
+  navigator.clipboard.writeText(text).then(() => notify('Copied ✓'));
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+let notifTimer;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─── LIVE TICKER ─────────────────────────────────────────────────────────────
+const liveEvents = [
+  { t:'wa', icon:'📨', msg:'New WA message from +91987XXXX', type:'ok' },
+  { t:'ig', icon:'💬', msg:'New IG comment on latest post', type:'info' },
+  { t:'wa', icon:'✅', msg:'Flow "Welcome Series" completed', type:'ok' },
+  { t:'ig', icon:'❤️', msg:'Story mention from @user_xyz', type:'info' },
+  { t:'wa', icon:'📤', msg:'Bulk blast: 48/50 delivered', type:'warn' },
+];
+
+let liveIdx = 0;
+setInterval(() => {
+  const ev = { ...liveEvents[liveIdx % liveEvents.length], time: new Date() };
+  liveIdx++;
+  state.logs.push(ev);
+  if (state.logs.length > 200) state.logs.shift();
+  renderDashLog();
+  // update trigger count
+  const tc = document.getElementById('stat-triggers');
+  if (tc) tc.textContent = parseInt(tc.textContent) + 1;
+}, 7000);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+seedLogs();
+renderDashLog();
+</script>
+</body>
+</html>
